@@ -9,7 +9,7 @@ Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
 # Elevation check
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
-    [Security.Principal.WindowsBuiltInRole] "Administrator")) {
+        [Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Warning "Rerun this script as Administrator."
     exit 1
 }
@@ -23,11 +23,13 @@ function Remove-Safely {
         try {
             Remove-Item $Path -Recurse -Force -ErrorAction Stop
             Write-Host "Removed: $Path" -ForegroundColor Green
-        } catch {
+        }
+        catch {
             Write-Host "Failed to remove: $Path" -ForegroundColor Red
             Write-Host $_.Exception.Message -ForegroundColor DarkGray
         }
-    } else {
+    }
+    else {
         Write-Host "Skipped (not found): $Path" -ForegroundColor Yellow
     }
 }
@@ -41,7 +43,8 @@ function Remove-WildcardSafely {
         foreach ($item in $items) {
             Remove-Safely $item.FullName
         }
-    } else {
+    }
+    else {
         Write-Host "Skipped (not found or empty): $PathPattern" -ForegroundColor Yellow
     }
 }
@@ -55,18 +58,20 @@ function Show-LargestFiles {
     Write-Host "==> Scanning for large files (>${MinSizeMB}MB) in $Path..." -ForegroundColor Cyan
     try {
         $files = Get-ChildItem -Path $Path -Recurse -ErrorAction SilentlyContinue |
-            Where-Object { -not $_.PSIsContainer -and $_.Length -gt ($MinSizeMB * 1MB) } |
-            Sort-Object Length -Descending |
-            Select-Object -First $Top
+        Where-Object { -not $_.PSIsContainer -and $_.Length -gt ($MinSizeMB * 1MB) } |
+        Sort-Object Length -Descending |
+        Select-Object -First $Top
         if ($files) {
             foreach ($file in $files) {
                 $sizeMB = [math]::Round($file.Length / 1MB, 2)
                 Write-Host ("{0,8} MB  {1}" -f $sizeMB, $file.FullName) -ForegroundColor Magenta
             }
-        } else {
+        }
+        else {
             Write-Host "No files larger than $MinSizeMB MB found in $Path." -ForegroundColor Yellow
         }
-    } catch {
+    }
+    catch {
         Write-Host "Error scanning for large files: $_" -ForegroundColor Red
     }
 }
@@ -131,10 +136,12 @@ try {
     if ($items.Count -gt 0) {
         $items | ForEach-Object { $_.InvokeVerb('delete') }
         Write-Host "Recycle Bin emptied" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "Recycle Bin already empty" -ForegroundColor Yellow
     }
-} catch {
+}
+catch {
     Write-Host "Failed to empty Recycle Bin: $_" -ForegroundColor Red
 }
 
@@ -165,10 +172,12 @@ try {
     if ($restorePoints -match 'Shadow Copy ID') {
         vssadmin delete shadows /all /quiet
         Write-Host "All system restore points deleted" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "No system restore points found" -ForegroundColor Yellow
     }
-} catch {
+}
+catch {
     Write-Host "Failed to delete system restore points: $_" -ForegroundColor Red
 }
 
@@ -199,7 +208,7 @@ function Remove-InvalidRunEntries {
     if ($keys) {
         foreach ($name in $keys.PSObject.Properties | Where-Object { $_.Name -ne 'PSPath' -and $_.Name -ne 'PSParentPath' -and $_.Name -ne 'PSChildName' -and $_.Name -ne 'PSDrive' -and $_.Name -ne 'PSProvider' }) {
             $value = $keys.$($name.Name)
-            $exe = $value -replace '"','' -replace ' .*',''
+            $exe = $value -replace '"', '' -replace ' .*', ''
             if ($exe -and -not (Test-Path $exe)) {
                 Remove-ItemProperty -Path $RegPath -Name $name.Name -ErrorAction SilentlyContinue
                 Write-Host "Removed invalid Run entry: $name ($exe)" -ForegroundColor Green
@@ -216,7 +225,8 @@ try {
     Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\LastVisitedPidlMRU" -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\ComDlg32\OpenSavePidlMRU" -Recurse -Force -ErrorAction SilentlyContinue
     Write-Host "Cleared Explorer MRU lists" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "Failed to clear Explorer MRU lists: $_" -ForegroundColor Red
 }
 
